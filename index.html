@@ -60,7 +60,10 @@
     const MAX_STAMPS = 10;
 
     const url = new URL(window.location.href);
-    const stampID = url.searchParams.get("id");
+    const stampID =
+    url.searchParams.get("stamp_id") ||
+    url.searchParams.get("id") ||
+    url.searchParams.get("stamp");
 
     const STORAGE_KEY = "myStampRally";
     let stamps = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
