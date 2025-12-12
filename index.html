@@ -42,12 +42,27 @@
             background: #ff6f61;
             color: white;
         }
+
+        /* 手動リセットボタン */
+        #resetBtn {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <h1>スタンプラリー</h1>
     <p>QRコードを読み取るとスタンプが追加されるよ！</p>
+
+    <!-- 手動リセットボタン -->
+    <button id="resetBtn">スタンプをリセットする</button>
 
     <div id="stampContainer">
         <div class="stamp" id="stamp1">スタート1</div>
@@ -58,37 +73,70 @@
     </div>
 
     <script>
-        // URLパラメータを取得
+        /* ------------------------------
+            ① 自動リセット処理
+        ------------------------------ */
+
+        const TODAY_KEY = "lastAccessDate";
+        const STAMP_KEY = "stamps";
+
+        // 今日の日付 (例: 2025-12-11)
+        const today = new Date().toISOString().slice(0, 10);
+
+        const lastDate = localStorage.getItem(TODAY_KEY);
+
+        // 日付が変わったらスタンプリセット
+        if (lastDate && lastDate !== today) {
+            localStorage.removeItem(STAMP_KEY);
+        }
+
+        // 今日の日付を保存
+        localStorage.setItem(TODAY_KEY, today);
+
+        /* ------------------------------
+            ② スタンプ処理
+        ------------------------------ */
+
         const url = new URL(window.location.href);
 
-        // ★ 修正：stamp_id / id / stamp のどれでも取得可能に
+        // stamp_id / id / stamp どれでもOK
         const stampID =
             url.searchParams.get("stamp_id") ||
             url.searchParams.get("id") ||
             url.searchParams.get("stamp");
 
-        // ローカルストレージからすでに押したスタンプを読み込み
-        const saved = JSON.parse(localStorage.getItem("stamps") || "[]");
+        const saved = JSON.parse(localStorage.getItem(STAMP_KEY) || "[]");
 
-        // 読み込んだスタンプを反映
+        // 保存されているスタンプを反映
         saved.forEach(id => {
             const el = document.getElementById(`stamp${id}`);
             if (el) el.classList.add("stamped");
         });
 
-        // 新しく読み込んだスタンプを追加
+        // 新しいスタンプを押された場合
         if (stampID) {
             const stampNum = Number(stampID);
             if (!saved.includes(stampNum)) {
                 saved.push(stampNum);
-                localStorage.setItem("stamps", JSON.stringify(saved));
+                localStorage.setItem(STAMP_KEY, JSON.stringify(saved));
             }
 
             const el = document.getElementById(`stamp${stampNum}`);
             if (el) el.classList.add("stamped");
         }
+
+        /* ------------------------------
+            ③ 手動リセットボタン
+        ------------------------------ */
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            if (confirm("スタンプをリセットしますか？")) {
+                localStorage.removeItem(STAMP_KEY);
+                localStorage.setItem(TODAY_KEY, today); // 今日で再セット
+                location.reload();
+            }
+        });
     </script>
 
 </body>
 </html>
-
