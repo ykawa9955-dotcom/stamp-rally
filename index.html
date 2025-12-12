@@ -36,7 +36,6 @@
             justify-content: center;
             font-size: 20px;
             font-weight: bold;
-            transition: transform 0.2s;
         }
 
         .stamped {
@@ -44,7 +43,17 @@
             color: white;
         }
 
-        /* ★ 手動リセットボタン調整 ★ */
+        /* ★ バウンスアニメーション */
+        @keyframes bounceAnim {
+            0% { transform: scale(0.6); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .bounce {
+            animation: bounceAnim 0.4s ease-out;
+        }
+
+        /* 手動リセットボタン */
         #resetBtn {
             width: 33%;
             padding: 8px 0;
@@ -65,18 +74,6 @@
             margin: 0 auto;
             display: flex;
             justify-content: flex-end;
-        }
-
-        /* ★ バウンスアニメーション ★ */
-        @keyframes bounce {
-            0%   { transform: scale(1); }
-            30%  { transform: scale(1.25); }
-            60%  { transform: scale(0.9); }
-            100% { transform: scale(1); }
-        }
-
-        .bounce {
-            animation: bounce 0.4s ease-out;
         }
     </style>
 </head>
@@ -99,7 +96,7 @@
 
     <script>
         /* ------------------------------
-            ① 自動リセット
+            ① 自動リセット処理
         ------------------------------ */
         const TODAY_KEY = "lastAccessDate";
         const STAMP_KEY = "stamps";
@@ -110,13 +107,14 @@
         if (lastDate && lastDate !== today) {
             localStorage.removeItem(STAMP_KEY);
         }
+
         localStorage.setItem(TODAY_KEY, today);
 
         /* ------------------------------
-            ② スタンプ処理
+            ② スタンプ処理（新規のみ跳ねる）
         ------------------------------ */
-        const url = new URL(window.location.href);
 
+        const url = new URL(window.location.href);
         const stampID =
             url.searchParams.get("stamp_id") ||
             url.searchParams.get("id") ||
@@ -124,33 +122,37 @@
 
         const saved = JSON.parse(localStorage.getItem(STAMP_KEY) || "[]");
 
+        // 既存のスタンプ反映
         saved.forEach(id => {
             const el = document.getElementById(`stamp${id}`);
             if (el) el.classList.add("stamped");
         });
 
+        // 新規押印処理
         if (stampID) {
             const stampNum = Number(stampID);
             const el = document.getElementById(`stamp${stampNum}`);
 
             if (el && !saved.includes(stampNum)) {
-                // 保存
+                // 新規スタンプ追加
                 saved.push(stampNum);
                 localStorage.setItem(STAMP_KEY, JSON.stringify(saved));
 
-                // stamped 適用
+                // 色変更
                 el.classList.add("stamped");
 
-                // ★ バウンス効果を付ける
+                // ★ 新規の時だけバウンス
                 el.classList.add("bounce");
-                el.addEventListener("animationend", () => {
-                    el.classList.remove("bounce");
-                }, { once: true });
+                el.addEventListener(
+                    "animationend",
+                    () => el.classList.remove("bounce"),
+                    { once: true }
+                );
             }
         }
 
         /* ------------------------------
-            ③ 手動リセット
+            ③ 手動リセット処理
         ------------------------------ */
         document.getElementById("resetBtn").addEventListener("click", () => {
             if (confirm("スタンプをリセットしますか？")) {
