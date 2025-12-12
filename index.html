@@ -129,27 +129,33 @@
         });
 
         // 新規押印処理
-        if (stampID) {
-            const stampNum = Number(stampID);
-            const el = document.getElementById(`stamp${stampNum}`);
+if (stampID) {
+    const stampNum = Number(stampID);
+    const el = document.getElementById(`stamp${stampNum}`);
 
-            if (el && !saved.includes(stampNum)) {
-                // 新規スタンプ追加
-                saved.push(stampNum);
-                localStorage.setItem(STAMP_KEY, JSON.stringify(saved));
+    if (el && !saved.includes(stampNum)) {
+        // 新規スタンプ追加
+        saved.push(stampNum);
+        localStorage.setItem(STAMP_KEY, JSON.stringify(saved));
 
-                // 色変更
-                el.classList.add("stamped");
+        // 色変更
+        el.classList.add("stamped");
 
-                // ★ 新規の時だけバウンス
+        // ★ 確実にバウンスさせるための処理
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
                 el.classList.add("bounce");
-                el.addEventListener(
-                    "animationend",
-                    () => el.classList.remove("bounce"),
-                    { once: true }
-                );
-            }
-        }
+            });
+        });
+
+        // バウンス終了後にクラス削除
+        el.addEventListener(
+            "animationend",
+            () => el.classList.remove("bounce"),
+            { once: true }
+        );
+    }
+}
 
         /* ------------------------------
             ③ 手動リセット処理
