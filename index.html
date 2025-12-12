@@ -43,16 +43,30 @@
             color: white;
         }
 
-        /* 手動リセットボタン */
+        /* ★ 手動リセットボタンの位置・サイズ・色を調整 ★ */
         #resetBtn {
-            margin: 20px 0;
-            padding: 10px 20px;
-            background: #ff4d4d;
+            width: 33%;                /* ワイドの1/3に */
+            padding: 8px 0;
+            background: #4D8CFF;       /* 青系の爽やかカラー */
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
+
+            /* 右寄せにするための設定 */
+            align-self: flex-end;
+            margin-right: 5%;
+            margin-top: 10px;
+        }
+
+        /* スマホで少し右に寄せ強調 */
+        #resetWrapper {
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-end; /* ★ ボタンを右寄せ */
         }
     </style>
 </head>
@@ -61,15 +75,17 @@
     <h1>スタンプラリー</h1>
     <p>QRコードを読み取るとスタンプが追加されるよ！</p>
 
-    <!-- 手動リセットボタン -->
-    <button id="resetBtn">スタンプをリセットする</button>
-
     <div id="stampContainer">
         <div class="stamp" id="stamp1">スタート1</div>
         <div class="stamp" id="stamp2">スタンプ2</div>
         <div class="stamp" id="stamp3">スタンプ3</div>
         <div class="stamp" id="stamp4">スタンプ4</div>
         <div class="stamp" id="stamp5">スタンプ5</div>
+    </div>
+
+    <!-- ★ ボタンを右寄せのラッパーに包む -->
+    <div id="resetWrapper">
+        <button id="resetBtn">リセット</button>
     </div>
 
     <script>
@@ -80,17 +96,13 @@
         const TODAY_KEY = "lastAccessDate";
         const STAMP_KEY = "stamps";
 
-        // 今日の日付 (例: 2025-12-11)
         const today = new Date().toISOString().slice(0, 10);
-
         const lastDate = localStorage.getItem(TODAY_KEY);
 
-        // 日付が変わったらスタンプリセット
         if (lastDate && lastDate !== today) {
             localStorage.removeItem(STAMP_KEY);
         }
 
-        // 今日の日付を保存
         localStorage.setItem(TODAY_KEY, today);
 
         /* ------------------------------
@@ -99,7 +111,6 @@
 
         const url = new URL(window.location.href);
 
-        // stamp_id / id / stamp どれでもOK
         const stampID =
             url.searchParams.get("stamp_id") ||
             url.searchParams.get("id") ||
@@ -107,13 +118,11 @@
 
         const saved = JSON.parse(localStorage.getItem(STAMP_KEY) || "[]");
 
-        // 保存されているスタンプを反映
         saved.forEach(id => {
             const el = document.getElementById(`stamp${id}`);
             if (el) el.classList.add("stamped");
         });
 
-        // 新しいスタンプを押された場合
         if (stampID) {
             const stampNum = Number(stampID);
             if (!saved.includes(stampNum)) {
@@ -126,13 +135,13 @@
         }
 
         /* ------------------------------
-            ③ 手動リセットボタン
+            ③ 手動リセット処理
         ------------------------------ */
 
         document.getElementById("resetBtn").addEventListener("click", () => {
             if (confirm("スタンプをリセットしますか？")) {
                 localStorage.removeItem(STAMP_KEY);
-                localStorage.setItem(TODAY_KEY, today); // 今日で再セット
+                localStorage.setItem(TODAY_KEY, today);
                 location.reload();
             }
         });
