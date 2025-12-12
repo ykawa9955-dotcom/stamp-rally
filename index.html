@@ -53,6 +53,20 @@
             animation: bounceAnim 0.4s ease-out;
         }
 
+        /* GET ボタン */
+        #getBtn {
+            width: 60%;
+            padding: 12px 0;
+            margin: 10px auto;
+            background: #28c628;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         /* 手動リセットボタン */
         #resetBtn {
             width: 33%;
@@ -80,11 +94,10 @@
 <body>
 
     <h1>スタンプラリー</h1>
-    <p>QRコードを読み取るとスタンプが追加されるよ！</p>
+    <p>QRコードを読み取ったら、下の「スタンプGET」ボタンを押してね！</p>
 
-    <!-- ▼▼★ GET!! 効果音 ★▼▼ -->
+    <!-- ▼▼ 効果音ファイル ▼▼ -->
     <audio id="getSound" src="get.mp3" preload="auto"></audio>
-    <!-- ▲▲★ ここまで追加 ★▲▲ -->
 
     <div id="stampContainer">
         <div class="stamp" id="stamp1">スタート1</div>
@@ -94,13 +107,16 @@
         <div class="stamp" id="stamp5">スタンプ5</div>
     </div>
 
+    <!-- ★ 追加：スタンプ GETボタン -->
+    <button id="getBtn">スタンプ GET!!</button>
+
     <div id="resetWrapper">
         <button id="resetBtn">リセット</button>
     </div>
 
     <script>
         /* ------------------------------
-            ① 自動リセット処理
+            自動リセット処理
         ------------------------------ */
         const TODAY_KEY = "lastAccessDate";
         const STAMP_KEY = "stamps";
@@ -115,36 +131,47 @@
         localStorage.setItem(TODAY_KEY, today);
 
         /* ------------------------------
-            ② スタンプ処理（新規のみ跳ねる & 効果音）
+            QR 読み込み：番号だけ取得
         ------------------------------ */
         const url = new URL(window.location.href);
-        const stampID =
+        const qrStamp =
             url.searchParams.get("stamp_id") ||
             url.searchParams.get("id") ||
             url.searchParams.get("stamp");
 
-        const saved = JSON.parse(localStorage.getItem(STAMP_KEY) || "[]");
+        let saved = JSON.parse(localStorage.getItem(STAMP_KEY) || "[]");
 
-        // 既存スタンプ反映
+        // ページ表示時の色の反映
         saved.forEach(id => {
             const el = document.getElementById(`stamp${id}`);
             if (el) el.classList.add("stamped");
         });
 
-        // 新規押印処理
-        if (stampID) {
-            const stampNum = Number(stampID);
-            const el = document.getElementById(`stamp${stampNum}`);
+        /* ------------------------------
+            ★ GETボタンで初めて反映
+        ------------------------------ */
+        document.getElementById("getBtn").addEventListener("click", () => {
+            if (!qrStamp) {
+                alert("QRコードを読み込んでから押してね！");
+                return;
+            }
 
-            if (el && !saved.includes(stampNum)) {
-                // 新規スタンプ保存
-                saved.push(stampNum);
+            const num = Number(qrStamp);
+            const el = document.getElementById(`stamp${num}`);
+
+            if (!el) {
+                alert("このQRコードは無効です");
+                return;
+            }
+
+            if (!saved.includes(num)) {
+                saved.push(num);
                 localStorage.setItem(STAMP_KEY, JSON.stringify(saved));
 
                 // 色変更
                 el.classList.add("stamped");
 
-                // ★ 効果音を再生！
+                // ★ 効果音
                 document.getElementById("getSound").play().catch(()=>{});
 
                 // ★ バウンス
@@ -153,17 +180,17 @@
                         el.classList.add("bounce");
                     });
                 });
+                el.addEventListener("animationend", () => {
+                    el.classList.remove("bounce");
+                }, { once: true });
 
-                el.addEventListener(
-                    "animationend",
-                    () => el.classList.remove("bounce"),
-                    { once: true }
-                );
+            } else {
+                alert("このスタンプはもう取っているよ！");
             }
-        }
+        });
 
         /* ------------------------------
-            ③ 手動リセット
+            手動リセット
         ------------------------------ */
         document.getElementById("resetBtn").addEventListener("click", () => {
             if (confirm("スタンプをリセットしますか？")) {
